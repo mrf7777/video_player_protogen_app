@@ -27,7 +27,11 @@ set_target_properties(httplib PROPERTIES
     INTERFACE_INCLUDE_DIRECTORIES "${httplib_SOURCE_DIR}"
 )
 
+## opencv
+find_package(OpenCV REQUIRED)
+
 target_include_directories(${PROJECT_NAME} PRIVATE ${httplib_SOURCE_DIR})
+target_link_libraries(${PROJECT_NAME} PRIVATE ${OpenCV_LIBS})
 target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
 configure_file("cmake_vars.h.in" "cmake_vars.h")
 

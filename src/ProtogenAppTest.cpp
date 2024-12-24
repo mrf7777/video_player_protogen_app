@@ -1,6 +1,7 @@
 #include <protogen/IProtogenApp.hpp>
 #include <protogen/IProportionProvider.hpp>
 #include <protogen/Resolution.hpp>
+#include <opencv2/opencv.hpp>
 #include <cmake_vars.h>
 
 #include <cmath>
