@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.16)
-project(protogen_app_test)
+project(videotest)
 
 include(FetchContent)
 
-set(PROTOGEN_APP_ID "protogenapptest")
+set(PROTOGEN_APP_ID "videotest")
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
