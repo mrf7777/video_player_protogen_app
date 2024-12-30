@@ -20,7 +20,8 @@ public:
         m_frameUpdateThread(),
         m_framerate(1.0f),
         m_deviceResolution(1, 1),
-        m_active(false)
+        m_active(false),
+        m_resourcesDirectory("")
     {}
 
     std::string name() const override {
@@ -50,6 +51,10 @@ public:
         } else {
             m_frameUpdateThread.join();
         }
+    }
+
+    void receiveResourcesDirectory(const std::string& resources_directory) override {
+        m_resourcesDirectory = resources_directory;
     }
 
     Endpoints serverEndpoints() const override {
@@ -166,6 +171,7 @@ private:
     float m_framerate;
     mutable Resolution m_deviceResolution;
     std::atomic<bool> m_active;
+    std::string m_resourcesDirectory;
 };
 
 // Interface to create and destroy you app.
