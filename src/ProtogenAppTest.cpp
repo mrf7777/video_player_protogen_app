@@ -111,7 +111,7 @@ private:
     /**
      * @brief Start the frame update thread.
      * 
-     * @param cap The video capture object to show. Takes ownership of the object.
+     * @param video_capture The video capture object to show. Takes ownership of the object.
     */
     void startFrameUpdateThread(cv::VideoCapture video_capture) {
         m_frameUpdateThread = std::thread(&VideoPlayer::frameUpdateThread, this, video_capture);
