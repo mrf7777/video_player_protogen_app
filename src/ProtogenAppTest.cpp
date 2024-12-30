@@ -18,6 +18,8 @@ public:
         : m_mouthProvider(nullptr),
         m_frame(cv::Mat()),
         m_frameUpdateThread(),
+        m_framerate(1.0f),
+        m_deviceResolution(1, 1),
         m_active(false)
     {}
 
@@ -41,6 +43,9 @@ public:
         m_active = active;
         if(m_active) {
             cv::VideoCapture video_capture("/home/mrf777/dev/video_player_protogen_app/build/protogen.mp4");
+            if(!video_capture.isOpened()) {
+                throw std::runtime_error("Could not open video file. Why was I passed a video capture that is not opened?");
+            }
             startFrameUpdateThread(video_capture);
         } else {
             m_frameUpdateThread.join();
@@ -96,10 +101,11 @@ public:
     }
 
     float framerate() const override {
-        return 30;
+        return m_framerate;
     }
 
     std::vector<Resolution> supportedResolutions(const Resolution& device_resolution) const override {
+        m_deviceResolution = device_resolution;
         return {device_resolution};
     }
 
@@ -114,15 +120,12 @@ private:
      * @param video_capture The video capture object to show. Takes ownership of the object.
     */
     void startFrameUpdateThread(cv::VideoCapture video_capture) {
+        m_framerate = video_capture.get(cv::VideoCaptureProperties::CAP_PROP_FPS);
         m_frameUpdateThread = std::thread(&VideoPlayer::frameUpdateThread, this, video_capture);
     }
 
     void frameUpdateThread(cv::VideoCapture video_capture) {
-        if(!video_capture.isOpened()) {
-            throw std::runtime_error("Could not open video file. Why was I passed a video capture that is not opened?");
-        }
-        const double fps = video_capture.get(cv::CAP_PROP_FPS);
-        const double time_interval = 1.0 / fps;
+        const double time_interval = 1.0 / m_framerate;
         const auto start_time = std::chrono::high_resolution_clock::now();
         cv::Mat frame;
         int frame_number;
@@ -131,7 +134,10 @@ private:
                 break;
             }
             frame_number = whatFrameShouldIRenderNow(start_time, time_interval);
-            cv::resize(frame, frame, cv::Size(128, 32));
+            const unsigned int device_width = m_deviceResolution.width();
+            const unsigned int device_height = m_deviceResolution.height();
+            const cv::Size device_size(device_width, device_height);
+            cv::resize(frame, frame, device_size);
             cv::cvtColor(frame, frame, cv::COLOR_BGR2RGB);
             {
                 std::lock_guard<std::mutex> lock(m_frameMutex);
@@ -157,6 +163,8 @@ private:
     mutable std::mutex m_frameMutex;
     cv::Mat m_frame;
     std::thread m_frameUpdateThread;
+    float m_framerate;
+    mutable Resolution m_deviceResolution;
     std::atomic<bool> m_active;
 };
 
