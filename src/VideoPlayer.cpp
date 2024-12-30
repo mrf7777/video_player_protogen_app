@@ -12,7 +12,7 @@
 
 using namespace protogen;
 
-class VideoPlayer : public protogen::IProtogenApp {
+class VideoPlayer : public IProtogenApp {
 public:
     VideoPlayer()
         : m_mouthProvider(nullptr),

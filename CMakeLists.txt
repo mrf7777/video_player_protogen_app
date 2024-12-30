@@ -9,7 +9,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(PROTOGEN_APP_SOURCES
-    "${PROJECT_SOURCE_DIR}/src/ProtogenAppTest.cpp"
+    "${PROJECT_SOURCE_DIR}/src/VideoPlayer.cpp"
 )
 
 add_library(${PROJECT_NAME} MODULE ${PROTOGEN_APP_SOURCES})
