@@ -109,9 +109,12 @@ public:
         return m_framerate;
     }
 
-    std::vector<Resolution> supportedResolutions(const Resolution& device_resolution) const override {
+    void receiveDeviceResolution(const Resolution& device_resolution) override {
         m_deviceResolution = device_resolution;
-        return {device_resolution};
+    }
+
+    std::vector<Resolution> supportedResolutions() const override {
+        return {m_deviceResolution};
     }
 
     void setMouthProportionProvider(std::shared_ptr<IProportionProvider> provider) {
@@ -169,7 +172,7 @@ private:
     cv::Mat m_frame;
     std::thread m_frameUpdateThread;
     float m_framerate;
-    mutable Resolution m_deviceResolution;
+    Resolution m_deviceResolution;
     std::atomic<bool> m_active;
     std::string m_resourcesDirectory;
 };
