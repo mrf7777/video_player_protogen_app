@@ -57,6 +57,9 @@ public:
         m_resourcesDirectory = resources_directory;
     }
 
+    void receiveUserDataDirectory([[maybe_unused]] const std::string& user_data_directory) override {
+    }
+
     Endpoints serverEndpoints() const override {
         using httplib::Request, httplib::Response;
         return Endpoints{
