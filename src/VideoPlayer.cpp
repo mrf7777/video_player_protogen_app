@@ -1,6 +1,7 @@
 #include <protogen/IProtogenApp.hpp>
 #include <protogen/IProportionProvider.hpp>
 #include <protogen/Resolution.hpp>
+#include <protogen/StandardAttributeStore.hpp>
 #include <opencv2/opencv.hpp>
 #include <cmake_vars.h>
 
@@ -21,23 +22,35 @@ public:
         m_framerate(1.0f),
         m_deviceResolution(1, 1),
         m_active(false),
-        m_resourcesDirectory("")
-    {}
-
-    std::string name() const override {
-        return "Video Test";
-    }
-
-    std::string id() const override {
-        return PROTOGEN_APP_ID;
-    }
-
-    std::string description() const override {
-        return "Testing video processing on protogen.";
+        m_resourcesDirectory(""),
+        m_attributes(std::shared_ptr<StandardAttributeStore>(new StandardAttributeStore()))
+    {
+        using namespace protogen::attributes;
+        using Access = protogen::attributes::IAttributeStore::Access;
+        m_attributes->adminSetAttribute(ATTRIBUTE_ID, PROTOGEN_APP_ID, Access::Read);
+        m_attributes->adminSetAttribute(ATTRIBUTE_NAME, "Video Test", Access::Read);
+        m_attributes->adminSetAttribute(ATTRIBUTE_DESCRIPTION, "Testing video processing on protogen.", Access::Read);
+        m_attributes->adminSetAttribute(ATTRIBUTE_THUMBNAIL, "/static/thumbnail.png", Access::Read);
+        m_attributes->adminSetAttribute(ATTRIBUTE_MAIN_PAGE, "/static/index.html", Access::Read);
+        m_attributes->adminSetAttribute(ATTRIBUTE_HOME_PAGE, "https://github.com/mrf7777/video_player_protogen_app", Access::Read);
     }
 
     bool sanityCheck([[maybe_unused]] std::string& errorMessage) const override {
         return true;
+    }
+
+    void initialize() override {
+        m_webServerThread = std::thread([this](){
+            using httplib::Request, httplib::Response;
+            auto server = httplib::Server();
+
+            // TODO: web interface.
+            server.set_mount_point("/static", m_resourcesDirectory + "/static");
+
+            m_webServerPort = server.bind_to_any_port("0.0.0.0");
+            server.listen_after_bind();
+        });
+        m_webServerThread.detach();
     }
 
     void setActive(bool active) override {
@@ -60,38 +73,8 @@ public:
     void receiveUserDataDirectory([[maybe_unused]] const std::string& user_data_directory) override {
     }
 
-    Endpoints serverEndpoints() const override {
-        using httplib::Request, httplib::Response;
-        return Endpoints{
-            {
-                Endpoint{HttpMethod::Get, "/home"},
-                [](const Request&, Response& res){ res.set_content("This is the homepage.", "text/html"); }
-            },
-            {
-                Endpoint{HttpMethod::Get, "/hello"},
-                [](const Request&, Response& res){ res.set_content("Hello!", "text/plain"); }
-            },
-            {
-                Endpoint{HttpMethod::Get, "/hello/website"},
-                [](const Request&, Response& res){ res.set_content("Hello, website!", "text/plain"); }
-            },
-        };
-    }
-
-    std::string homePage() const override {
-        return "/static/index.html";
-    }
-
-    std::string staticFilesDirectory() const override {
-        return "/static";
-    }
-
-    std::string staticFilesPath() const override {
-        return "/static";
-    }
-
-    std::string thumbnail() const override {
-        return "/static/thumbnail.png";
+    int webPort() const override {
+        return m_webServerPort;
     }
 
     void render(ICanvas& canvas) const override {
@@ -170,6 +153,10 @@ private:
         return start_time_of_next_frame;
     }
 
+    std::shared_ptr<attributes::IAttributeStore> getAttributeStore() override {
+        return m_attributes;
+    }
+
     std::shared_ptr<IProportionProvider> m_mouthProvider;
     mutable std::mutex m_frameMutex;
     cv::Mat m_frame;
@@ -178,6 +165,9 @@ private:
     Resolution m_deviceResolution;
     std::atomic<bool> m_active;
     std::string m_resourcesDirectory;
+    std::shared_ptr<StandardAttributeStore> m_attributes;
+    std::thread m_webServerThread;
+    int m_webServerPort;
 };
 
 // Interface to create and destroy you app.
